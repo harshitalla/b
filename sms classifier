@@ -1,0 +1,48 @@
+import zipfile
+import os
+import pandas as pd
+from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
+from sklearn.model_selection import train_test_split
+from sklearn.naive_bayes import MultinomialNB
+from sklearn.pipeline import Pipeline
+from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
+
+# Specify the zip file path
+zip_file_path = r'C:\Users\talla\OneDrive\Desktop\spam coll.zip'
+extracted_file_name = 'SMSSpamCollection'
+extracted_file_path = r'C:\Users\talla\OneDrive\Desktop'  # The directory to extract to
+
+# Extract the file
+with zipfile.ZipFile(zip_file_path, 'r') as zip_ref:
+    zip_ref.extractall(extracted_file_path)
+
+# Build the full path to the extracted file
+full_extracted_file_path = os.path.join(extracted_file_path, extracted_file_name)
+
+# Load dataset
+df = pd.read_csv(full_extracted_file_path, sep='\t', header=None, names=['label', 'message'])
+
+# Convert labels to binary values
+df['label'] = df['label'].map({'ham': 0, 'spam': 1})
+
+# Split the dataset
+X_train, X_test, y_train, y_test = train_test_split(df['message'], df['label'], test_size=0.2, random_state=42)
+
+# Build a pipeline
+pipeline = Pipeline([
+    ('vect', CountVectorizer()),
+    ('tfidf', TfidfTransformer()),
+    ('clf', MultinomialNB()),
+])
+
+# Train the model
+pipeline.fit(X_train, y_train)
+
+# Make predictions
+y_pred = pipeline.predict(X_test)
+
+# Evaluate the model
+print('Classification Report:\n', classification_report(y_test, y_pred))
+print('Confusion Matrix:\n', confusion_matrix(y_test, y_pred))
+print('Accuracy Score:', accuracy_score(y_test, y_pred))
+print('spam')
